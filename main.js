@@ -62,7 +62,7 @@ class EitaaApp {
                 const notification = new Notification({
                     title: title,
                     body: body || '',
-                    icon: icon || this.getIconPath()
+                    icon: this.getIconPath()
                 });
 
                 notification.show();
