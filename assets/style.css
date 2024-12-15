@@ -1,0 +1,9 @@
+[class^=ads-dialog-box] {
+  display: none !important;
+}
+
+.scrollable.scrollable-y.no-scrollbar {
+  max-width: 100% !important;
+}
+
+/*# sourceMappingURL=style.css.map */
