@@ -2,8 +2,12 @@ import {app, BrowserWindow, Tray, Menu, ipcMain, dialog, Notification} from 'ele
 import semver from "semver";
 import {download} from 'electron-dl';
 import fs from "fs";
-import path from 'path';
 import {exec} from 'child_process';
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class EitaaApp {
     constructor() {
@@ -30,7 +34,7 @@ class EitaaApp {
                 contextIsolation: true,
                 webviewTag: false,
                 enableRemoteModule: false,
-                preload: path.join(path.dirname(""), 'preload.js')
+                preload: path.join(__dirname, 'preload.js')
             },
         });
 
@@ -99,7 +103,7 @@ class EitaaApp {
     }
 
     injectCSS() {
-        const cssPath = path.join(path.dirname(""), 'assets', 'style.css');
+        const cssPath = path.join(__dirname, 'assets', 'style.css');
         if (fs.existsSync(cssPath)) {
             const cssContent = fs.readFileSync(cssPath, 'utf-8');
             this.mainWindow.webContents.insertCSS(cssContent);
@@ -107,7 +111,7 @@ class EitaaApp {
     }
 
     injectJS() {
-        const jsPath = path.join(path.dirname(""), 'assets', 'script.js');
+        const jsPath = path.join(__dirname, 'assets', 'script.js');
         if (fs.existsSync(jsPath)) {
             const jsContent = fs.readFileSync(jsPath, 'utf-8');
             this.mainWindow.webContents.executeJavaScript(jsContent);
@@ -142,7 +146,7 @@ class EitaaApp {
     }
 
     getIconPath() {
-        return path.join(path.dirname(""), 'icon.png');
+        return path.join(__dirname, 'icon.png');
     }
 
     initApp() {
