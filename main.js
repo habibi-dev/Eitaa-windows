@@ -1,6 +1,9 @@
-const {app, BrowserWindow, Tray, Menu, ipcMain, Notification} = require('electron');
-const path = require('path');
-const fs = require('fs');
+import {app, BrowserWindow, Tray, Menu, ipcMain, dialog, Notification} from 'electron';
+import semver from "semver";
+import {download} from 'electron-dl';
+import fs from "fs";
+import path from 'path';
+import {exec} from 'child_process';
 
 class EitaaApp {
     constructor() {
@@ -13,7 +16,6 @@ class EitaaApp {
     initNotificationHandlers() {
         if (!Notification.isSupported()) {
             console.error('Notifications are not supported');
-            return;
         }
     }
 
@@ -28,7 +30,7 @@ class EitaaApp {
                 contextIsolation: true,
                 webviewTag: false,
                 enableRemoteModule: false,
-                preload: path.join(__dirname, 'preload.js')
+                preload: path.join(path.dirname(""), 'preload.js')
             },
         });
 
@@ -42,7 +44,6 @@ class EitaaApp {
         this.setupPermissions();
         this.setupNotificationListener();
         this.injectCustomAssets();
-
     }
 
     handleExternalLinks = (details) => {
@@ -98,7 +99,7 @@ class EitaaApp {
     }
 
     injectCSS() {
-        const cssPath = path.join(__dirname, 'assets', 'style.css');
+        const cssPath = path.join(path.dirname(""), 'assets', 'style.css');
         if (fs.existsSync(cssPath)) {
             const cssContent = fs.readFileSync(cssPath, 'utf-8');
             this.mainWindow.webContents.insertCSS(cssContent);
@@ -106,7 +107,7 @@ class EitaaApp {
     }
 
     injectJS() {
-        const jsPath = path.join(__dirname, 'assets', 'script.js');
+        const jsPath = path.join(path.dirname(""), 'assets', 'script.js');
         if (fs.existsSync(jsPath)) {
             const jsContent = fs.readFileSync(jsPath, 'utf-8');
             this.mainWindow.webContents.executeJavaScript(jsContent);
@@ -141,7 +142,7 @@ class EitaaApp {
     }
 
     getIconPath() {
-        return path.join(__dirname, 'icon.png');
+        return path.join(path.dirname(""), 'icon.png');
     }
 
     initApp() {
@@ -163,8 +164,73 @@ class EitaaApp {
         app.on('ready', () => {
             this.createWindow();
             this.createTray();
+            this.checkForUpdates().then();
         });
     }
+
+    async checkForUpdates() {
+        try {
+            const response = await fetch('https://raw.githubusercontent.com/habibi-dev/Eitaa-windows/refs/heads/main/package.json');
+            const latestData = await response.json();
+
+            const currentVersion = app.getVersion();
+            const latestVersion = latestData.version;
+
+            if (semver.gt(latestVersion, currentVersion)) {
+                const downloadLink = latestData.latest;
+
+                const userResponse = await dialog.showMessageBox(this.mainWindow, {
+                    type: 'question',
+                    buttons: ['بله', 'خیر'],
+                    title: 'بروزرسانی موجود است',
+                    message: `نسخه ${latestVersion} جدید منتشر شده است. آیا می‌خواهید آن را دانلود و نصب کنید؟`,
+                });
+
+                if (userResponse.response === 0) {
+                    this.downloadAndInstallUpdate(downloadLink);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking for updates:', error);
+        }
+    }
+
+    downloadAndInstallUpdate(downloadLink) {
+        dialog.showMessageBox(this.mainWindow, {
+            type: 'info',
+            title: 'در حال دانلود...',
+            message: 'در حال دانلود نسخه جدید... لطفا منتظر بمانید.',
+        });
+
+        download(this.mainWindow, downloadLink)
+            .then((downloadItem) => {
+                dialog.showMessageBox(this.mainWindow, {
+                    type: 'info',
+                    title: 'دانلود تمام شد',
+                    message: 'نسخه جدید دانلود شد. لطفا فایل را اجرا کنید.',
+                });
+
+                const filePath = downloadItem.getSavePath();
+
+                exec(`start "" "${filePath}"`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error('Error launching installer:', error);
+                    } else {
+                        app.exit()
+                        console.log('Installer started:', stdout);
+                    }
+                });
+            })
+            .catch((error) => {
+                console.error('Error downloading update:', error);
+                dialog.showMessageBox(this.mainWindow, {
+                    type: 'error',
+                    title: 'خطا',
+                    message: 'در دانلود بروزرسانی مشکلی پیش آمد.',
+                });
+            });
+    }
+
 }
 
 new EitaaApp();
