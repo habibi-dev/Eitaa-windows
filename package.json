@@ -1,7 +1,8 @@
 {
   "name": "eitaa",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "main.js",
+  "type": "module",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder"
@@ -15,8 +16,10 @@
     "electron-builder": "^25.1.8"
   },
   "dependencies": {
+    "electron-dl": "^4.0.0",
     "electron-updater": "^6.3.9",
     "node-fetch": "^3.3.2",
     "semver": "^7.6.3"
-  }
+  },
+  "latest": "https://github.com/habibi-dev/eitaa-windows/releases/download/1.0.2/eitaa.Setup.1.0.2.exe"
 }
