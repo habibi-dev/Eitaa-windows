@@ -1,9 +1,9 @@
-import {app, BrowserWindow, Tray, Menu, ipcMain, dialog, Notification} from 'electron';
+import {app, BrowserWindow, Tray, Menu, ipcMain, dialog, shell, Notification} from 'electron';
 import semver from "semver";
 import {download} from 'electron-dl';
 import fs from "fs";
 import {exec} from 'child_process';
-import { fileURLToPath } from "url";
+import {fileURLToPath} from "url";
 import path from "path";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,9 +51,34 @@ class EitaaApp {
     }
 
     handleExternalLinks = (details) => {
-        require('electron').shell.openExternal(details.url);
-        return {action: 'deny'};
-    }
+        const url = details.url;
+
+        if (url.startsWith('blob:')) {
+            const blobWindow = new BrowserWindow({
+                parent: this.mainWindow,
+                icon: this.getIconPath(),
+                modal: false,
+                width: 800,
+                height: 600,
+                webPreferences: {
+                    nodeIntegration: false,
+                    contextIsolation: true,
+                    webviewTag: false,
+                    enableRemoteModule: false,
+                },
+            });
+
+            blobWindow.loadURL(url);
+            return {action: 'deny'};
+        }
+
+        if (url.startsWith('http') || url.startsWith('https')) {
+            shell.openExternal(url);
+            return {action: 'deny'};
+        }
+
+        return {action: 'allow'};
+    };
 
     setupNotificationListener() {
         this.mainWindow.webContents.executeJavaScript(`
