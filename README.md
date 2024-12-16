@@ -17,7 +17,7 @@
 ## دانلود و اجرا
 
 ### 1. دانلود برنامه
-فایل اجرایی **(exe)** برنامه را از [اینجا](https://github.com/habibi-dev/Eitaa-windows/releases/download/1.0.1/eitaa.Setup.1.0.1.exe) دریافت کنید.
+فایل اجرایی **(exe)** برنامه را از [اینجا](https://github.com/habibi-dev/Eitaa-windows/releases/) دریافت کنید.
 
 ### 2. اجرا
 پس از دانلود، فایل اجرایی را اجرا کنید و پیام‌رسان ایتا را بدون نیاز به مرورگر استفاده کنید.
