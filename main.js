@@ -40,7 +40,7 @@ class EitaaApp {
 
         this.mainWindow.removeMenu();
 
-        this.mainWindow.webContents.setWindowOpenHandler(this.handleExternalLinks);
+        this.contextMenu();
 
         this.mainWindow.loadURL('https://web.eitaa.com/');
 
@@ -48,6 +48,17 @@ class EitaaApp {
         this.setupPermissions();
         this.setupNotificationListener();
         this.injectCustomAssets();
+    }
+
+    contextMenu() {
+        this.mainWindow.webContents.on('context-menu', (event, params) => {
+            const contextMenu = Menu.buildFromTemplate([
+                {label: 'Copy', role: 'copy', enabled: params.editFlags.canCopy},
+                {label: 'Paste', role: 'paste', enabled: params.editFlags.canPaste},
+                {label: 'Select All', role: 'selectAll'},
+            ]);
+            contextMenu.popup();
+        });
     }
 
     handleExternalLinks = (details) => {
@@ -144,14 +155,34 @@ class EitaaApp {
     }
 
     createTray() {
+        if (this.tray) {
+            this.tray.destroy();
+        }
+
+        let autoLaunchEnabled = app.getLoginItemSettings().openAtLogin;
+
         this.tray = new Tray(this.getIconPath());
+
+        const updateAutoLaunchStatus = () => {
+            autoLaunchEnabled = !autoLaunchEnabled;
+            app.setLoginItemSettings({
+                openAtLogin: autoLaunchEnabled,
+            });
+            this.createTray();
+        };
+
         const contextMenu = Menu.buildFromTemplate([
-            {label: 'نمایش', click: () => this.mainWindow.show()},
-            {label: 'خروج', click: () => app.exit()},
+            { label: 'نمایش', click: () => this.mainWindow.show() },
+            {
+                label: `اجرای خودکار: ${autoLaunchEnabled ? 'فعال' : 'غیرفعال'}`,
+                click: updateAutoLaunchStatus,
+            },
+            { label: 'خروج', click: () => app.exit() },
         ]);
 
         this.tray.setToolTip('Eitaa');
         this.tray.setContextMenu(contextMenu);
+
         this.setupTrayEvents();
     }
 
